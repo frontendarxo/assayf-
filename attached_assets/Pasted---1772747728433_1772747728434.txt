@@ -1,0 +1,313 @@
+Общая идея
+
+Сайт должен выглядеть как интерактивная карта глобального бизнеса.
+
+Главная визуальная метафора:
+
+потоки торговли между странами
+
+3D-элементы символизируют:
+
+маршруты логистики
+
+движение валют
+
+международные связи
+
+торговые цепочки
+
+Стиль — fintech + global trade + cinematic motion.
+
+3D Визуальный стиль
+
+Основные 3D элементы:
+
+1. Flow Lines
+
+Динамические линии (как в shader компоненте), которые символизируют:
+
+торговые потоки
+
+финансовые потоки
+
+логистические маршруты
+
+Линии должны медленно двигаться и реагировать на скролл.
+
+2. Floating Global Map
+
+Полупрозрачная 3D карта мира.
+
+Отмеченные регионы:
+
+Turkey
+
+Russia
+
+Tajikistan
+
+China
+
+Между ними:
+
+анимированные торговые линии.
+
+3. Floating Business Objects
+
+В 3D пространстве медленно вращаются:
+
+cargo box
+
+airplane
+
+container
+
+currency symbols
+
+product packages
+
+Стиль:
+
+low-poly / minimal 3D
+
+Hero Section (3D)
+
+Hero занимает 100vh.
+
+Фон:
+
+3D shader lines animation (из твоего компонента).
+
+Поверх:
+
+большой headline.
+
+Пример:
+
+Global Trade & Logistics
+Connecting Markets Worldwide
+
+Подзаголовок:
+
+Cargo logistics, China sourcing,
+financial operations and product distribution.
+
+CTA:
+
+Start Cooperation
+
+Анимации:
+
+текст появляется stagger animation
+
+линии в фоне плавно движутся
+
+кнопка имеет subtle glow
+
+Scroll Experience
+
+Сайт должен ощущаться как путешествие по глобальной торговой сети.
+
+Section Transition
+
+Между секциями:
+
+мягкий parallax
+
+плавные 3D световые градиенты
+
+About Section
+
+Появляется 3D карта мира.
+
+Статистика появляется рядом:
+
+5+ Years Experience
+20+ Business Partners
+10+ Countries Served
+
+Counters анимируются.
+
+Services Section
+
+Карточки появляются из глубины (3D transform).
+
+При hover:
+
+карточка поднимается
+
+появляется glow
+
+иконка слегка вращается.
+
+Cargo Section
+
+Появляется 3D линия маршрута:
+
+Turkey → Russia → Tajikistan
+
+С движущимися световыми точками.
+
+China Sourcing Section
+
+3D контейнеры медленно движутся по экрану.
+
+Карточки показывают:
+
+Supplier search
+
+Factory verification
+
+Procurement
+
+Logistics
+
+Currency Section
+
+3D floating symbols:
+
+$
+
+€
+
+¥
+
+Линии соединяют страны.
+
+Export / Import Section
+
+3D stack boxes + supply chain animation.
+
+Assayf Products Section
+
+3D витрина продуктов:
+
+rotating protein bar
+
+coffee cup
+
+energy drink
+
+Карточки показывают продукты.
+
+Case Studies Section
+
+Карточки появляются с перспективой (depth animation).
+
+При hover:
+
+карточка раскрывается.
+
+Contact Section
+
+Минималистичный блок.
+
+Фон:
+
+медленно затухающая shader анимация.
+
+CTA:
+
+Start your international business cooperation today
+2️⃣ Где использовать твой Shader компонент
+
+Этот компонент идеально подходит для:
+
+Hero Background
+Hero Section
+  ShaderAnimation (absolute background)
+  Headline
+  CTA
+
+Он создаёт живой эффект потоков торговли.
+
+Section Divider
+
+Можно использовать как фон между секциями.
+
+Contact Section Background
+
+Мягкая версия анимации.
+
+3️⃣ Интеграция в Next.js + Tailwind + shadcn
+
+Если проекта ещё нет:
+
+Установка проекта
+npx create-next-app@latest global-trade-site
+
+выбрать:
+
+TypeScript: yes
+App Router: yes
+Tailwind: yes
+Установка shadcn
+npx shadcn-ui@latest init
+Почему нужна папка
+/components/ui
+
+shadcn использует её для:
+
+UI компонентов
+
+переиспользуемых элементов
+
+design system
+
+Структура проекта
+app
+components
+  ui
+    shader-lines.tsx
+  hero.tsx
+  services.tsx
+  about.tsx
+  cases.tsx
+  contact.tsx
+1️⃣ Добавь shader компонент
+/components/ui/shader-lines.tsx
+
+(вставь код который ты отправил)
+
+2️⃣ Demo компонент
+/components/hero.tsx
+import { ShaderAnimation } from "@/components/ui/shader-lines"
+
+export function Hero() {
+  return (
+    <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      
+      <ShaderAnimation />
+
+      <div className="relative z-10 text-center max-w-4xl">
+        <h1 className="text-6xl font-bold tracking-tight">
+          Global Trade & Logistics
+        </h1>
+
+        <p className="mt-6 text-xl text-gray-400">
+          Cargo logistics, China sourcing and financial operations
+        </p>
+
+        <button className="mt-10 px-8 py-4 rounded-xl bg-blue-600 text-white">
+          Start Cooperation
+        </button>
+      </div>
+
+    </section>
+  )
+}
+3️⃣ Установка иконок
+npm install lucide-react
+4️⃣ Установка Framer Motion
+npm install framer-motion
+5️⃣ Использование в page.tsx
+app/page.tsx
+import { Hero } from "@/components/hero"
+
+export default function Home() {
+  return (
+    <main>
+      <Hero />
+    </main>
+  )
+}
