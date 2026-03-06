@@ -1,6 +1,6 @@
 {
-  "buildCommand": "pnpm run build:client",
-  "outputDirectory": "dist/spa",
+  "buildCommand": "pnpm run build",
+  "outputDirectory": "dist/public",
   "framework": null,
   "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
 }
