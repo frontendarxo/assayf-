@@ -5,6 +5,9 @@ export default {
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      maxWidth: {
+        container: "1280px",
+      },
       borderRadius: {
         lg: ".5625rem", /* 9px */
         md: ".375rem", /* 6px */
@@ -76,10 +79,10 @@ export default {
           border: "var(--sidebar-accent-border)"
         },
         status: {
-          online: "rgb(34 197 94)",
-          away: "rgb(245 158 11)",
-          busy: "rgb(239 68 68)",
-          offline: "rgb(156 163 175)",
+          online: "#3E8ECB",
+          away: "#9DA1A2",
+          busy: "#334049",
+          offline: "#9DA1A2",
         },
       },
       fontFamily: {
@@ -96,10 +99,25 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(calc(-100% - var(--gap)))" },
+        },
+        "marquee-infinite": {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" },
+        },
+        "marquee-vertical": {
+          from: { transform: "translateY(0)" },
+          to: { transform: "translateY(calc(-100% - var(--gap)))" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        marquee: "marquee var(--duration, 40s) infinite linear",
+        "marquee-infinite": "marquee-infinite var(--duration, 80s) linear infinite",
+        "marquee-vertical": "marquee-vertical var(--duration, 40s) linear infinite",
       },
     },
   },

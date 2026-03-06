@@ -1,23 +1,68 @@
-import { useState, useRef } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import {
+  Anchor,
+  ArrowRight,
+  BarChart3,
+  CheckCircle2,
+  ChevronRight,
+  CircleDollarSign,
+  Coffee,
+  Dumbbell,
+  Factory,
+  Globe2,
+  Package,
+  Route,
+  PackageSearch,
+  Plane,
+  Send,
+  Ship,
+  ShieldCheck,
+  ShoppingCart,
+  Truck,
+  Zap,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { 
-  Globe2, Anchor, Plane, Truck, Zap, 
-  MapPin, ArrowRight, PackageSearch, ShieldCheck, 
-  ShoppingCart, Send, Coffee, Battery, Dumbbell,
-  BarChart3, ChevronRight, CheckCircle2
-} from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { NetworkBackground } from "@/components/NetworkBackground";
 import { TiltCard } from "@/components/TiltCard";
-import { AnimatedCounter } from "@/components/AnimatedCounter";
-import { useSubmitContact } from "@/hooks/use-contact";
-import { api } from "@shared/routes";
+import { NavBar } from "@/components/ui/tubelight-navbar";
+import { TestimonialsSection } from "@/components/ui/testimonials-with-marquee";
+import { useToast } from "@/hooks/use-toast";
 
-// Schema for contact form
-const contactFormSchema = api.contact.create.input;
-type ContactFormValues = z.infer<typeof contactFormSchema>;
+const ShaderAnimation = lazy(() =>
+  import("@/components/ui/shader-animation").then((m) => ({
+    default: m.ShaderAnimation,
+  }))
+);
+
+const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL ?? "contact@example.com";
+
+const TESTIMONIAL_AUTHORS = [
+  { name: "Ava Green", username: "@ava", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=96&h=96&fit=crop" },
+  { name: "Ana Miller", username: "@ana", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=96&h=96&fit=crop" },
+  { name: "Mateo Rossi", username: "@mat", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=96&h=96&fit=crop" },
+  { name: "Maya Patel", username: "@maya", img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=96&h=96&fit=crop" },
+  { name: "Noah Smith", username: "@noah", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=96&h=96&fit=crop" },
+  { name: "Lucas Stone", username: "@luc", img: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=96&h=96&fit=crop" },
+  { name: "Haruto Sato", username: "@haru", img: "https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=96&h=96&fit=crop" },
+  { name: "Emma Lee", username: "@emma", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=96&h=96&fit=crop" },
+  { name: "Carlos Ray", username: "@carl", img: "https://images.unsplash.com/photo-1502685104226-ee32379eefbe?w=96&h=96&fit=crop" },
+];
+
+function getContactFormSchema(
+  t: { validation: { required: string; invalidEmail: string } }
+) {
+  return z.object({
+    name: z.string().min(1, t.validation.required),
+    email: z.string().email(t.validation.invalidEmail),
+    message: z.string().min(1, t.validation.required),
+  });
+}
+type ContactFormValues = z.infer<ReturnType<typeof getContactFormSchema>>;
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -32,37 +77,73 @@ const staggerContainer = {
   }
 };
 
+const WORD_ROTATION_INTERVAL_MS = 2000;
+
 export default function Home() {
+  const { lang, setLang, t } = useLanguage();
   const { scrollYProgress } = useScroll();
   const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
+  const rotatingWords = useMemo(() => t.hero.rotatingWords as unknown as string[], [t]);
+  const [wordIndex, setWordIndex] = useState(0);
+
+  const navItems = useMemo(() => [
+    { name: t.nav.services, url: "#cargo", icon: Route },
+    { name: t.nav.routes, url: "#china", icon: ShoppingCart },
+    { name: t.nav.sourcing, url: "#currency", icon: CircleDollarSign },
+    { name: t.nav.export, url: "#export", icon: Ship },
+    { name: t.nav.products, url: "#products", icon: Package },
+  ], [t]);
+
+  const testimonialsForSection = useMemo(
+    () =>
+      TESTIMONIAL_AUTHORS.map((author, i) => ({
+        author: {
+          name: author.name,
+          handle: author.username,
+          avatar: author.img,
+        },
+        text: t.testimonials.items[i].body,
+      })),
+    [t]
+  );
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setWordIndex((prev) => (prev + 1) % rotatingWords.length);
+    }, WORD_ROTATION_INTERVAL_MS);
+    return () => clearTimeout(timeout);
+  }, [wordIndex, rotatingWords]);
+
   return (
     <div className="min-h-screen bg-background text-foreground relative">
       <div className="noise-overlay" />
-      
-      {/* Navbar */}
-      <nav className="fixed top-0 left-0 w-full z-50 glass-panel border-x-0 border-t-0 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Globe2 className="w-8 h-8 text-primary" />
-          <span className="font-display font-bold text-xl tracking-wide">ASSAYF<span className="text-primary">.LOGISTICS</span></span>
-        </div>
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-          <a href="#services" className="hover:text-primary transition-colors">Services</a>
-          <a href="#route" className="hover:text-primary transition-colors">Routes</a>
-          <a href="#sourcing" className="hover:text-primary transition-colors">Sourcing</a>
-          <a href="#products" className="hover:text-primary transition-colors">Products</a>
-        </div>
-        <button 
-          onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-          className="px-6 py-2.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-primary-foreground transition-all duration-300 font-semibold text-sm"
-        >
-          Initiate Contact
-        </button>
-      </nav>
+
+      <div className="fixed top-0 left-0 w-full z-50">
+        <nav className="px-6 py-3 flex justify-center">
+          <NavBar items={navItems} />
+        </nav>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setLang(lang === "ru" ? "en" : "ru")}
+        aria-label={lang === "ru" ? "Switch to English" : "Переключить на русский"}
+        className="fixed bottom-6 right-6 z-50 size-12 rounded-full border border-foreground/10 bg-background/80 backdrop-blur-md shadow-lg text-sm font-medium text-foreground hover:bg-background/90 transition-colors flex items-center justify-center"
+      >
+        {lang === "ru" ? "RUS" : "ENG"}
+      </button>
 
       {/* HERO SECTION */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden pt-16">
+      <section className="relative h-screen flex items-center justify-center overflow-hidden pt-20">
+        <Suspense
+          fallback={
+            <div className="absolute inset-0 w-full h-full pointer-events-none" />
+          }
+        >
+          <ShaderAnimation className="absolute inset-0 w-full h-full pointer-events-none" />
+        </Suspense>
         <NetworkBackground />
         <div className="absolute inset-0 bg-grid-pattern opacity-30" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
@@ -76,53 +157,75 @@ export default function Home() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, ease: "easeOut" }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-foreground/5 border border-foreground/10 mb-8 backdrop-blur-sm">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </span>
-              <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Global Nodes Active</span>
+              <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                {t.hero.badge}
+              </span>
             </div>
           </motion.div>
-          
-          <motion.h1 
-            className="text-5xl md:text-7xl lg:text-8xl font-extrabold leading-[1.1] mb-6"
+
+          <motion.div
+            className="mb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            Orchestrating <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-cyan-400 to-accent text-glow">
-              Global Trade
-            </span>
-          </motion.h1>
-          
-          <motion.p 
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tighter">
+              {t.hero.title}
+            </h1>
+            <div className="relative h-[1.2em] text-5xl md:text-7xl lg:text-8xl font-semibold overflow-hidden mt-2">
+              {rotatingWords.map((word, index) => (
+                <motion.span
+                  key={index}
+                  className="absolute inset-x-0 text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary to-accent text-glow text-center"
+                  initial={{ opacity: 0, y: "100%" }}
+                  transition={{ type: "spring", stiffness: 50 }}
+                  animate={
+                    wordIndex === index
+                      ? { y: "0%", opacity: 1 }
+                      : { y: wordIndex > index ? "-100%" : "100%", opacity: 0 }
+                  }
+                >
+                  {word}
+                </motion.span>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.p
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            Seamless supply chain architecture connecting Turkey, Russia, Tajikistan, and China. Precision sourcing, unyielding logistics.
+            {t.hero.subtitle}
           </motion.p>
-          
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <button 
-              onClick={() => document.getElementById('route')?.scrollIntoView({ behavior: 'smooth' })}
+            <button
+              onClick={() =>
+                document.getElementById("cargo")?.scrollIntoView({ behavior: "smooth" })
+              }
               className="px-8 py-4 rounded-xl font-semibold bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-300 w-full sm:w-auto"
             >
-              Explore Routes
+              {t.hero.exploreServices}
             </button>
-            <button 
-              onClick={() => document.getElementById('sourcing')?.scrollIntoView({ behavior: 'smooth' })}
-              className="px-8 py-4 rounded-xl font-semibold glass-panel hover:bg-white/10 transition-all duration-300 w-full sm:w-auto flex items-center justify-center gap-2 group"
+            <button
+              onClick={() =>
+                document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })
+              }
+              className="px-8 py-4 rounded-xl font-semibold glass-panel hover:bg-foreground/10 transition-all duration-300 w-full sm:w-auto flex items-center justify-center gap-2 group"
             >
-              China Sourcing
+              {t.hero.getStarted}
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
           </motion.div>
@@ -138,7 +241,7 @@ export default function Home() {
           ].map((item, i) => (
             <motion.div
               key={i}
-              className="absolute bottom-[-10%] text-6xl font-display font-bold text-white/5"
+              className="absolute bottom-[-10%] text-6xl font-display font-bold text-foreground/5"
               style={{ left: item.x }}
               animate={{
                 y: ["0vh", "-120vh"],
@@ -159,7 +262,7 @@ export default function Home() {
       </section>
 
       {/* STATS SECTION */}
-      <section className="py-20 border-y border-border/50 bg-white/[0.02] relative z-10">
+      <section className="py-12 border-y border-border/50 bg-foreground/[0.02] relative z-10">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div 
             variants={staggerContainer}
@@ -172,26 +275,32 @@ export default function Home() {
               <div className="text-4xl md:text-5xl font-display font-bold text-primary mb-2">
                 <AnimatedCounter target={5} suffix="+" />
               </div>
-              <div className="text-sm text-muted-foreground uppercase tracking-wider">Years of Excellence</div>
+              <div className="text-sm text-muted-foreground uppercase tracking-wider">
+                {t.stats.years}
+              </div>
             </motion.div>
             <motion.div variants={fadeInUp} className="p-4">
               <div className="text-4xl md:text-5xl font-display font-bold text-accent mb-2">
                 <AnimatedCounter target={20} suffix="+" />
               </div>
-              <div className="text-sm text-muted-foreground uppercase tracking-wider">Global Partners</div>
+              <div className="text-sm text-muted-foreground uppercase tracking-wider">
+                {t.stats.partners}
+              </div>
             </motion.div>
             <motion.div variants={fadeInUp} className="p-4">
               <div className="text-4xl md:text-5xl font-display font-bold text-primary mb-2">
                 <AnimatedCounter target={10} suffix="+" />
               </div>
-              <div className="text-sm text-muted-foreground uppercase tracking-wider">Countries Served</div>
+              <div className="text-sm text-muted-foreground uppercase tracking-wider">
+                {t.stats.countries}
+              </div>
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* SERVICES SECTION */}
-      <section id="services" className="py-32 relative z-10">
+      {/* CARGO SECTION */}
+      <section id="cargo" className="py-20 relative z-10">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div 
             initial="hidden"
@@ -200,25 +309,27 @@ export default function Home() {
             variants={fadeInUp}
             className="text-center mb-20"
           >
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">Omnichannel <span className="text-primary">Logistics</span></h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">Comprehensive freight solutions engineered for speed, security, and absolute reliability.</p>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">
+              {t.cargo.title} <span className="text-primary">{t.cargo.titleAccent}</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">{t.cargo.subtitle}</p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
           >
             {[
-              { icon: Anchor, title: "Ocean Freight", desc: "High-volume cargo via optimized maritime channels with real-time tracking." },
-              { icon: Plane, title: "Air Cargo", desc: "Expedited aerial transport for time-critical and high-value assets." },
-              { icon: Truck, title: "Ground Fleet", desc: "Extensive overland network navigating complex continental routes." },
-              { icon: ShieldCheck, title: "Customs Clearance", desc: "Frictionless border navigation managed by regulatory experts." },
+              { icon: Truck, title: t.cargo.auto, desc: t.cargo.autoDesc },
+              { icon: Plane, title: t.cargo.air, desc: t.cargo.airDesc },
+              { icon: Zap, title: t.cargo.express, desc: t.cargo.expressDesc },
+              { icon: ShieldCheck, title: t.cargo.customs, desc: t.cargo.customsDesc },
             ].map((service, i) => (
               <motion.div key={i} variants={fadeInUp}>
-                <TiltCard className="h-full p-8 flex flex-col items-start text-left border-t border-white/10">
+                <TiltCard className="h-full p-8 flex flex-col items-start text-left border-t border-foreground/10">
                   <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 text-primary">
                     <service.icon className="w-7 h-7" />
                   </div>
@@ -228,11 +339,46 @@ export default function Home() {
               </motion.div>
             ))}
           </motion.div>
+
+          {/* Cases section */}
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+            className="glass-panel rounded-3xl p-8 md:p-12 border-t border-foreground/20"
+          >
+            <h3 className="text-2xl md:text-3xl font-bold mb-8 text-center">
+              {t.cargo.cases.title}
+            </h3>
+            <div className="grid md:grid-cols-2 gap-8 mb-8">
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
+                <h4 className="text-xl font-bold mb-2">{t.cargo.cases.case1}</h4>
+                <p className="text-muted-foreground">{t.cargo.cases.case1desc}</p>
+              </div>
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 border border-accent/20">
+                <h4 className="text-xl font-bold mb-2">{t.cargo.cases.case2}</h4>
+                <p className="text-muted-foreground">{t.cargo.cases.case2desc}</p>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button className="px-6 py-3 rounded-lg glass-panel hover:bg-foreground/10 transition-all duration-300">
+                {t.cargo.cases.viewAll}
+              </button>
+              <button 
+                onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
+                className="px-6 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-2 group"
+              >
+                {t.cargo.cases.getService}
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* CARGO ROUTE SECTION */}
-      <section id="route" className="py-32 bg-black/50 relative overflow-hidden">
+      {/* CHINA SOURCING SECTION */}
+      <section id="china" className="py-20 bg-black/50 relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-10" />
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <motion.div 
@@ -242,139 +388,78 @@ export default function Home() {
             variants={fadeInUp}
             className="mb-20"
           >
-            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-center">Strategic <span className="text-accent">Corridors</span></h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-center">Visualizing our primary transit artery connecting key Eurasian markets.</p>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-center">
+              {t.china.title} <span className="text-accent">{t.china.titleAccent}</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-center">
+              {t.china.subtitle}
+            </p>
           </motion.div>
 
-          <div className="relative py-20 px-4 max-w-4xl mx-auto">
-            {/* Desktop Route Line */}
-            <div className="hidden md:block absolute top-1/2 left-[10%] right-[10%] h-0.5 bg-border -translate-y-1/2">
-              <motion.div 
-                className="h-full bg-gradient-to-r from-primary to-accent"
-                initial={{ width: "0%" }}
-                whileInView={{ width: "100%" }}
-                viewport={{ once: true }}
-                transition={{ duration: 2, ease: "easeInOut" }}
-              />
-              {/* Traveling dot */}
-              <motion.div
-                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.8)]"
-                initial={{ left: "0%" }}
-                animate={{ left: "100%" }}
-                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-              >
-                <Truck className="absolute -top-8 left-1/2 -translate-x-1/2 w-6 h-6 text-primary" />
-              </motion.div>
-            </div>
-
-            {/* Mobile Route Line */}
-            <div className="md:hidden absolute left-8 top-[10%] bottom-[10%] w-0.5 bg-border">
-              <motion.div 
-                className="w-full bg-gradient-to-b from-primary to-accent"
-                initial={{ height: "0%" }}
-                whileInView={{ height: "100%" }}
-                viewport={{ once: true }}
-                transition={{ duration: 2, ease: "easeInOut" }}
-              />
-            </div>
-
-            <div className="flex flex-col md:flex-row justify-between relative z-10 gap-12 md:gap-0">
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="max-w-2xl"
+          >
+            <h3 className="text-2xl md:text-3xl font-bold mb-8">{t.china.why.title}</h3>
+            
+            <div className="space-y-4 mb-8">
               {[
-                { country: "Turkey", desc: "Origin & Consolidation", delay: 0 },
-                { country: "Russia", desc: "Transit Hub", delay: 0.5 },
-                { country: "Tajikistan", desc: "Final Destination", delay: 1 },
-              ].map((node, i) => (
+                { icon: CheckCircle2, text: t.china.why.experience },
+                { icon: ShieldCheck, text: t.china.why.quality },
+                { icon: BarChart3, text: t.china.why.prices },
+                { icon: Truck, text: t.china.why.logistics },
+              ].map((item, i) => (
                 <motion.div 
                   key={i}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: node.delay, duration: 0.5 }}
-                  className="flex md:flex-col items-center md:text-center gap-6 md:gap-4 relative group"
+                  transition={{ delay: i * 0.1 }}
+                  className="flex items-center gap-3"
                 >
-                  <div className="w-16 h-16 rounded-full bg-background border-4 border-primary flex items-center justify-center shadow-[0_0_20px_rgba(0,180,255,0.3)] group-hover:scale-110 transition-transform duration-300 z-10">
-                    <MapPin className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold font-display">{node.country}</h3>
-                    <p className="text-sm text-muted-foreground">{node.desc}</p>
-                  </div>
+                  <item.icon className="w-5 h-5 text-primary flex-shrink-0" />
+                  <span className="text-muted-foreground">{item.text}</span>
                 </motion.div>
               ))}
             </div>
-          </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+              {[
+                { icon: PackageSearch, title: t.china.services.sourcing },
+                { icon: ShieldCheck, title: t.china.services.verification },
+                { icon: ShoppingCart, title: t.china.services.negotiation },
+                { icon: Send, title: t.china.services.shipping },
+              ].map((service, i) => (
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 + 0.4 }}
+                  className="p-4 rounded-xl glass-panel flex items-center gap-3"
+                >
+                  <service.icon className="w-6 h-6 text-primary" />
+                  <span className="text-sm font-medium">{service.title}</span>
+                </motion.div>
+              ))}
+            </div>
+
+            <button 
+              onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
+              className="px-8 py-4 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-2 group"
+            >
+              {t.china.getService}
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </motion.div>
         </div>
       </section>
 
-      {/* CHINA SOURCING SECTION */}
-      <section id="sourcing" className="py-32 relative z-10">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <motion.div 
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              <h2 className="text-3xl md:text-5xl font-bold mb-6">China <span className="text-primary">Sourcing</span> Protocol</h2>
-              <p className="text-muted-foreground mb-8 text-lg">We eliminate the risk of international procurement. Our on-ground teams verify, negotiate, and secure your supply chain directly from the factory floor.</p>
-              
-              <div className="space-y-6">
-                {[
-                  { icon: PackageSearch, title: "Supplier Discovery", desc: "Identifying top-tier manufacturers meeting exact specifications." },
-                  { icon: ShieldCheck, title: "Factory Verification", desc: "On-site auditing to ensure quality standards and capacity." },
-                  { icon: ShoppingCart, title: "Procurement & Negotiation", desc: "Securing favorable terms and overseeing production." },
-                  { icon: Send, title: "Export Logistics", desc: "Managing customs and freight from port to destination." },
-                ].map((step, i) => (
-                  <motion.div 
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.15 }}
-                    className="flex gap-4 p-4 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
-                  >
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                      <step.icon className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-bold mb-1">{step.title}</h4>
-                      <p className="text-sm text-muted-foreground">{step.desc}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-            
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="relative aspect-square"
-            >
-              {/* Abstract representation of sourcing network */}
-              <div className="absolute inset-0 glass-panel rounded-3xl overflow-hidden flex items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 opacity-50 mix-blend-overlay" />
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-                  className="w-[150%] h-[150%] absolute"
-                  style={{
-                    background: "conic-gradient(from 0deg at 50% 50%, transparent 0deg, hsl(var(--primary)/0.2) 90deg, transparent 180deg)"
-                  }}
-                />
-                <div className="relative z-10 w-48 h-48 rounded-full border border-white/20 flex items-center justify-center bg-background/80 backdrop-blur-xl shadow-2xl">
-                  <BarChart3 className="w-16 h-16 text-primary" />
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* PRODUCTS SECTION */}
-      <section id="products" className="py-32 bg-black/30 border-y border-border/50 relative z-10">
+      {/* CURRENCY SECTION */}
+      <section id="currency" className="py-20 relative z-10">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div 
             initial="hidden"
@@ -383,67 +468,294 @@ export default function Home() {
             variants={fadeInUp}
             className="text-center mb-20"
           >
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">Assayf <span className="text-accent">Products</span></h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">Our proprietary line of premium FMCG goods, distributed globally.</p>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">
+              {t.currency.title} <span className="text-primary">{t.currency.titleAccent}</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-8">{t.currency.subtitle}</p>
+            <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-primary/10 border border-primary/20">
+              <span className="text-primary font-bold">{t.currency.experience}</span>
+            </div>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="grid md:grid-cols-3 gap-8"
+            className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16"
           >
             {[
-              { icon: Dumbbell, name: "Assayf Protein Bar", desc: "High-performance nutrition engineered for athletes.", color: "from-orange-500 to-red-600" },
-              { icon: Coffee, name: "Assayf Premium Coffee", desc: "Ethically sourced, precision-roasted beans.", color: "from-amber-700 to-stone-900" },
-              { icon: Zap, name: "Assayf Energy Drink", desc: "Sustained focus and vitality matrix.", color: "from-cyan-400 to-blue-600" },
+              { 
+                icon: ArrowRight, 
+                title: t.currency.services.exchange, 
+                desc: t.currency.services.exchangeDesc 
+              },
+              { 
+                icon: Send, 
+                title: t.currency.services.transfer, 
+                desc: t.currency.services.transferDesc 
+              },
+              { 
+                icon: ShieldCheck, 
+                title: t.currency.services.consulting, 
+                desc: t.currency.services.consultingDesc 
+              },
+              { 
+                icon: BarChart3, 
+                title: t.currency.services.hedging, 
+                desc: t.currency.services.hedgingDesc 
+              },
+            ].map((service, i) => (
+              <motion.div key={i} variants={fadeInUp}>
+                <TiltCard className="h-full p-8 flex flex-col items-start text-left border-t border-foreground/10">
+                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 text-primary">
+                    <service.icon className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">{service.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{service.desc}</p>
+                </TiltCard>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <h3 className="text-2xl font-bold mb-8">{lang === 'ru' ? 'Поддерживаемые валюты' : 'Supported Currencies'}</h3>
+            <div className="flex flex-wrap justify-center gap-4 mb-8">
+              {t.currency.currencies.map((currency: string, i: number) => (
+                <motion.div
+                  key={currency}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="px-6 py-3 rounded-full bg-accent/10 border border-accent/20 text-accent font-bold text-lg"
+                >
+                  {currency}
+                </motion.div>
+              ))}
+            </div>
+            <button 
+              onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
+              className="px-8 py-4 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-2 group mx-auto"
+            >
+              {t.currency.getService}
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* EXPORT/IMPORT SECTION */}
+      <section id="export" className="py-20 bg-black/30 relative z-10">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+            className="text-center mb-20"
+          >
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">
+              {t.exportimport.title} / <span className="text-accent">{t.exportimport.titleAccent}</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">{t.exportimport.subtitle}</p>
+          </motion.div>
+
+          <div className="grid lg:grid-cols-2 gap-16 items-center mb-16">
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
+              <h3 className="text-2xl md:text-3xl font-bold mb-8">{t.exportimport.partners.title}</h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                <div className="text-center p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
+                  <div className="text-3xl font-bold text-primary mb-2">
+                    <AnimatedCounter target={20} suffix="+" />
+                  </div>
+                  <div className="text-sm text-muted-foreground">{t.exportimport.partners.factories}</div>
+                </div>
+                <div className="text-center p-6 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 border border-accent/20">
+                  <div className="text-3xl font-bold text-accent mb-2">
+                    <AnimatedCounter target={50} suffix="+" />
+                  </div>
+                  <div className="text-sm text-muted-foreground">{t.exportimport.partners.companies}</div>
+                </div>
+                <div className="text-center p-6 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30">
+                  <div className="text-3xl font-bold text-primary mb-2">$2M+</div>
+                  <div className="text-sm text-muted-foreground">{t.exportimport.partners.turnover}</div>
+                </div>
+              </div>
+
+              <div className="p-6 rounded-2xl glass-panel mb-8">
+                <h4 className="text-lg font-bold mb-4">{lang === 'ru' ? 'Наша услуга:' : 'Our Service:'}</h4>
+                <p className="text-muted-foreground">{t.exportimport.service}</p>
+              </div>
+
+              <button 
+                onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
+                className="px-8 py-4 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-2 group"
+              >
+                {t.exportimport.getService}
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
+              <h3 className="text-2xl font-bold mb-6">{lang === 'ru' ? 'Наши преимущества' : 'Our Advantages'}</h3>
+              <div className="space-y-4">
+                {[
+                  { icon: Globe2, text: t.exportimport.advantages.network },
+                  { icon: CheckCircle2, text: t.exportimport.advantages.experience },
+                  { icon: ShieldCheck, text: t.exportimport.advantages.reliability },
+                  { icon: Send, text: t.exportimport.advantages.support },
+                ].map((advantage, i) => (
+                  <motion.div 
+                    key={i}
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="flex items-center gap-4 p-4 rounded-xl glass-panel"
+                  >
+                    <advantage.icon className="w-6 h-6 text-primary flex-shrink-0" />
+                    <span className="text-muted-foreground">{advantage.text}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* PRODUCTS SECTION */}
+      <section id="products" className="py-20 bg-black/50 border-y border-border/50 relative z-10">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+            className="text-center mb-20"
+          >
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">
+              {t.products.title} <span className="text-accent">{t.products.titleAccent}</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">{t.products.subtitle}</p>
+          </motion.div>
+
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid md:grid-cols-3 gap-8 mb-12"
+          >
+            {[
+              {
+                icon: Dumbbell,
+                name: t.products.nutrition,
+                desc: t.products.nutritionDesc,
+                color: "from-orange-500 to-red-600",
+              },
+              {
+                icon: Coffee,
+                name: t.products.coffee,
+                desc: t.products.coffeeDesc,
+                color: "from-amber-700 to-stone-900",
+              },
+              {
+                icon: Zap,
+                name: t.products.drinks,
+                desc: t.products.drinksDesc,
+                color: "from-primary to-accent",
+              },
             ].map((product, i) => (
               <motion.div key={i} variants={fadeInUp}>
                 <TiltCard className="h-full p-1 group">
                   <div className={`absolute inset-0 rounded-2xl opacity-50 bg-gradient-to-br ${product.color} blur-xl group-hover:opacity-70 transition-opacity duration-500`} />
-                  <div className="relative h-full bg-card rounded-xl p-8 border border-white/10 flex flex-col items-center text-center">
-                    <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 shadow-inner">
-                      <product.icon className="w-10 h-10 text-white" />
+                  <div className="relative h-full bg-card rounded-xl p-8 border border-foreground/10 flex flex-col items-center text-center">
+                    <div className="w-20 h-20 rounded-full bg-foreground/5 flex items-center justify-center mb-6 shadow-inner">
+                      <product.icon className="w-10 h-10 text-foreground" />
                     </div>
                     <h3 className="text-2xl font-bold font-display mb-3">{product.name}</h3>
-                    <p className="text-muted-foreground text-sm">{product.desc}</p>
+                    <p className="text-muted-foreground text-sm mb-4">{product.desc}</p>
                   </div>
                 </TiltCard>
               </motion.div>
             ))}
           </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <button 
+              onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
+              className="px-8 py-4 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-2 group mx-auto"
+            >
+              {t.products.getService}
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </motion.div>
         </div>
       </section>
 
+      {/* TESTIMONIALS SECTION */}
+      <div className="relative z-10">
+        <TestimonialsSection
+          title={t.testimonials.title}
+          titleAccent={t.testimonials.titleAccent}
+          description={t.testimonials.subtitle}
+          testimonials={testimonialsForSection}
+        />
+      </div>
+
       {/* CONTACT SECTION */}
-      <section id="contact" className="py-32 relative z-10">
+      <section id="contact" className="py-20 relative z-10">
         <div className="max-w-4xl mx-auto px-6">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="glass-panel rounded-3xl p-8 md:p-12 border-t border-l border-white/20 shadow-2xl relative overflow-hidden"
+            className="glass-panel rounded-3xl p-8 md:p-12 border-t border-l border-foreground/20 shadow-2xl relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
             
             <div className="grid md:grid-cols-2 gap-12 relative z-10">
               <div>
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">Establish <br/><span className="text-primary">Connection</span></h2>
-                <p className="text-muted-foreground mb-8">Deploy our logistics infrastructure for your enterprise. Send us your requirements.</p>
-                
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                  {t.contact.title} <br />
+                  <span className="text-primary">{t.contact.titleAccent}</span>
+                </h2>
+                <p className="text-muted-foreground mb-8">{t.contact.subtitle}</p>
+
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <CheckCircle2 className="w-5 h-5 text-primary" />
-                    <span>Secure end-to-end encryption</span>
+                    <span>{t.contact.secure}</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <CheckCircle2 className="w-5 h-5 text-primary" />
-                    <span>24/7 dedicated support team</span>
+                    <span>{t.contact.support}</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <CheckCircle2 className="w-5 h-5 text-primary" />
-                    <span>Custom routing proposals</span>
+                    <span>{t.contact.customRouting}</span>
                   </div>
                 </div>
               </div>
@@ -458,76 +770,93 @@ export default function Home() {
       
       {/* FOOTER */}
       <footer className="border-t border-border/50 py-8 text-center text-sm text-muted-foreground relative z-10 bg-background">
-        <p>© {new Date().getFullYear()} Assayf Logistics. All systems operational.</p>
+        <p>{t.footer.replace("{year}", String(new Date().getFullYear()))}</p>
       </footer>
     </div>
   );
 }
 
 function ContactForm() {
-  const submitContact = useSubmitContact();
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const schema = getContactFormSchema(t);
   const form = useForm<ContactFormValues>({
-    resolver: zodResolver(contactFormSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      message: ""
-    }
+    resolver: zodResolver(schema),
+    defaultValues: { name: "", email: "", message: "" },
   });
 
   const onSubmit = (data: ContactFormValues) => {
-    submitContact.mutate(data, {
-      onSuccess: () => form.reset()
+    const subject = encodeURIComponent(`Contact from ${data.name}`);
+    const body = encodeURIComponent(
+      `${data.message}\n\n— ${data.name} (${data.email})`
+    );
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+    form.reset();
+    toast({
+      title: t.form.toastTitle,
+      description: t.form.toastDescription,
+      className: "bg-card border-primary/50 text-foreground",
     });
   };
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
       <div>
-        <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">Identification</label>
-        <input 
+        <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
+          {t.form.identification}
+        </label>
+        <input
           {...form.register("name")}
-          className="w-full bg-background/50 border border-white/10 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-          placeholder="Enterprise / Name"
+          className="w-full bg-background/50 border border-foreground/10 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          placeholder={t.form.placeholderName}
         />
         {form.formState.errors.name && (
-          <span className="text-destructive text-xs mt-1 block">{form.formState.errors.name.message}</span>
+          <span className="text-destructive text-xs mt-1 block">
+            {form.formState.errors.name.message}
+          </span>
         )}
       </div>
-      
+
       <div>
-        <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">Comms Link</label>
-        <input 
+        <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
+          {t.form.commsLink}
+        </label>
+        <input
           {...form.register("email")}
           type="email"
-          className="w-full bg-background/50 border border-white/10 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-          placeholder="email@domain.com"
+          className="w-full bg-background/50 border border-foreground/10 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          placeholder={t.form.placeholderEmail}
         />
         {form.formState.errors.email && (
-          <span className="text-destructive text-xs mt-1 block">{form.formState.errors.email.message}</span>
+          <span className="text-destructive text-xs mt-1 block">
+            {form.formState.errors.email.message}
+          </span>
         )}
       </div>
 
       <div>
-        <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">Payload</label>
-        <textarea 
+        <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
+          {t.form.payload}
+        </label>
+        <textarea
           {...form.register("message")}
           rows={4}
-          className="w-full bg-background/50 border border-white/10 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none"
-          placeholder="Define your logistics requirements..."
+          className="w-full bg-background/50 border border-foreground/10 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none"
+          placeholder={t.form.placeholderMessage}
         />
         {form.formState.errors.message && (
-          <span className="text-destructive text-xs mt-1 block">{form.formState.errors.message.message}</span>
+          <span className="text-destructive text-xs mt-1 block">
+            {form.formState.errors.message.message}
+          </span>
         )}
       </div>
 
-      <button 
+      <button
         type="submit"
-        disabled={submitContact.isPending}
-        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
+        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors group"
       >
-        {submitContact.isPending ? "Transmitting..." : "Transmit Protocol"}
-        {!submitContact.isPending && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+        {t.form.submit}
+        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
       </button>
     </form>
   );

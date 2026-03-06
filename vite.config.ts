@@ -30,8 +30,27 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("react-dom") || id.includes("/react/")) {
+              return "react-vendor";
+            }
+            if (id.includes("framer-motion")) {
+              return "framer-motion";
+            }
+            if (id.includes("three")) {
+              return "three";
+            }
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
   },
   server: {
+    port: 5000,
     fs: {
       strict: true,
       deny: ["**/.*"],

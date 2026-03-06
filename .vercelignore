@@ -1,0 +1,5 @@
+# Не нужны для сборки фронтенда
+.local
+.replit
+server
+dist
